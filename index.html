@@ -30,3 +30,117 @@ body{
   position:relative;overflow:hidden;
   background:var(--plum);color:#fff;
   border-radius:28px;
+  padding:56px 28px 40px;text-align:center;
+  cursor:pointer;display:block;width:100%;
+  transition:transform .7s cubic-bezier(.6,0,.2,1),opacity .6s ease;
+}
+.cover:focus-visible{outline:4px solid var(--sun);outline-offset:4px}
+.sun{
+  width:170px;height:170px;margin:0 auto 28px;border-radius:50%;
+  background:
+    radial-gradient(circle,var(--sun) 0 38%,transparent 39%),
+    repeating-conic-gradient(var(--sun) 0 6deg,transparent 6deg 18deg);
+  -webkit-mask:radial-gradient(circle,#000 0 99%,transparent 100%);
+  animation:spin 40s linear infinite;
+}
+.cover h1{
+  font-family:'Aref Ruqaa',serif;font-size:76px;line-height:1.1;color:#fff;
+}
+.cover p{margin-top:14px;font-size:17px;color:#f3cfe0}
+.hint{display:inline-block;margin-top:28px;padding:10px 22px;border-radius:999px;
+  background:var(--sun);color:var(--plum);font-weight:700;font-size:16px}
+
+/* Message card */
+.message{
+  position:absolute;inset:0;
+  background:var(--card);border-radius:28px;
+  padding:40px 28px 32px;text-align:center;
+  box-shadow:0 20px 50px rgba(58,19,70,.18);
+  opacity:0;visibility:hidden;transform:translateY(24px) scale(.97);
+  transition:opacity .6s .25s ease,transform .6s .25s ease,visibility 0s .25s;
+}
+.stage.open .cover{transform:rotateX(70deg) translateY(-30px);opacity:0;pointer-events:none}
+.stage.open .message{position:relative;opacity:1;visibility:visible;transform:none}
+.stage.open .cover{position:absolute;inset:0}
+
+.message h2{
+  font-family:'Aref Ruqaa',serif;font-size:42px;line-height:1.35;color:var(--rose);
+}
+.message .wish{margin-top:22px;font-size:19px;line-height:2;font-weight:500}
+.message .wish p+p{margin-top:12px}
+.rule{width:64px;height:4px;border-radius:4px;background:var(--sun);margin:30px auto 22px}
+.ps{font-size:15.5px;line-height:1.9;color:var(--muted)}
+.ps strong{color:var(--plum)}
+
+canvas{position:fixed;inset:0;pointer-events:none;z-index:5}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){
+  .sun{animation:none}
+  .cover,.message{transition:none}
+}
+</style>
+</head>
+<body>
+<main class="stage" id="stage">
+  <div class="cover" id="cover" role="button" tabindex="0" aria-label="افتحي البطاقة">
+    <div class="sun" aria-hidden="true"></div>
+    <h1>ضحى</h1>
+    <p>في بطاقة ليك…</p>
+    <span class="hint">اضغطي عشان تفتحيها</span>
+  </div>
+
+  <section class="message" aria-live="polite">
+    <h2>كل سنة وإنتي طيبة يا ضحى 🎂</h2>
+    <div class="wish">
+      <p>ضحى اسم على مسمّى، وين ما تمشي بتجيبي معاك الصباح والضو.</p>
+      <p>يوم ميلادك يوم غالي علينا، لأنو الدنيا اتزينت يوم جيتي فيها.</p>
+      <p>الله يديك العافية ويفرّح قلبك، ويحقق ليك كل الحاجات الحلوة البتتمناها، وتفضلي دايماً ضحكتك ساكنة وشك وقلبك أبيض زي ما هو.</p>
+      <p>عقبال مليون سنة وإنتي في خير وفرح وسلامة 🤍</p>
+    </div>
+    <div class="rule"></div>
+    <p class="ps">كانت ح تكون من القلب… بس بعد ما عرفت إنو في <strong>مازن</strong>، قلبي جرحو. اعمل شنو؟ 💔</p>
+  </section>
+</main>
+<canvas id="confetti"></canvas>
+
+<script>
+const stage=document.getElementById('stage');
+const cover=document.getElementById('cover');
+const cv=document.getElementById('confetti');
+const ctx=cv.getContext('2d');
+const colors=['#e8557a','#f7b32b','#3a1346','#ff9db8','#ffd978'];
+let pieces=[];
+
+function fit(){cv.width=innerWidth;cv.height=innerHeight}
+fit();addEventListener('resize',fit);
+
+function burst(){
+  pieces=Array.from({length:110},()=>({
+    x:cv.width/2,y:cv.height/2.4,
+    vx:(Math.random()-.5)*14,vy:-Math.random()*13-3,
+    s:Math.random()*8+5,r:Math.random()*6,vr:(Math.random()-.5)*.3,
+    c:colors[Math.floor(Math.random()*colors.length)]
+  }));
+  requestAnimationFrame(tick);
+}
+function tick(){
+  ctx.clearRect(0,0,cv.width,cv.height);
+  pieces.forEach(p=>{
+    p.vy+=.35;p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;
+    ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.r);
+    ctx.fillStyle=p.c;ctx.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);
+    ctx.restore();
+  });
+  pieces=pieces.filter(p=>p.y<cv.height+20);
+  if(pieces.length)requestAnimationFrame(tick);else ctx.clearRect(0,0,cv.width,cv.height);
+}
+
+cover.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')cover.click()});
+cover.addEventListener('click',()=>{
+  stage.classList.add('open');
+  if(!matchMedia('(prefers-reduced-motion:reduce)').matches)burst();
+});
+</script>
+</body>
+</html>
